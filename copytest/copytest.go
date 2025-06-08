@@ -60,8 +60,13 @@ func main() {
 			fmt.Printf("Version=2 (tick %v)\n", next)
 		}
 	} else if replaceSelf {
-		selfPath := filepath.Join(".", "bin", "copytest")
-		newVersionPath := filepath.Join(".", "bin", "copytestV2")
+		selfName, sourceName := "copytest", "copytestV2"
+		if runtime.GOOS == "windows" {
+			selfName = selfName + ".exe"
+			sourceName = sourceName + ".exe"
+		}
+		selfPath := filepath.Join(".", "bin", selfName)
+		newVersionPath := filepath.Join(".", "bin", sourceName)
 		err := move(selfPath, newVersionPath)
 		if err != nil {
 			fmt.Printf("ERROR copying file: %s\n", err)
