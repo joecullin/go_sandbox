@@ -1,8 +1,8 @@
 # go_sandbox
 
-Some scratch code from learning go.
+Some scratch code, from my effort to learn [Go](https://go.dev/).
 
-Surely not very interesting to anyone else yet, but if I share it here I'll have it handy in case I set the "learning go" push aside for a bit.
+Surely not very interesting to anyone else yet. Sharing it here so I'll have it handy in case I pause my "learning go" push for a bit.
 
-- Code from [A tour of Go](https://go.dev/tour/list).
+- My code from working through [A tour of Go](https://go.dev/tour/list).
 - Some tiny apps to try out various areas.
