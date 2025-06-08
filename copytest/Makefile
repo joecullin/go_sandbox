@@ -22,9 +22,12 @@ format:
 build:
 	perl -pi -e 's/Version=./Version=1/g' copytest.go
 	GOOS=darwin GOARCH=amd64 go build -o bin/copytestV1 copytest.go
+	GOOS=windows GOARCH=amd64 go build -o bin/copytestV1.exe copytest.go
 	perl -pi -e 's/Version=./Version=2/g' copytest.go
 	GOOS=darwin GOARCH=amd64 go build -o bin/copytestV2 copytest.go
+	GOOS=windows GOARCH=amd64 go build -o bin/copytestV2.exe copytest.go
 	cp bin/copytestV1 bin/copytest
+	cp bin/copytestV1.exe bin/copytest.exe
 	ls -halt bin/copytest*
 	./bin/copytest --version
 	./bin/copytestV1 --version
