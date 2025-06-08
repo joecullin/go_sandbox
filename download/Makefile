@@ -1,9 +1,12 @@
 run:
+	# clean dir:
+	rm -f files/*
+
 	# run program:
 	go run download.go
 
 	# check results:
 	ls -halt files
 
-precommit:
-	go fmt
+format:
+	gofmt -w *.go

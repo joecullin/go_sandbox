@@ -5,17 +5,16 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"runtime"
 )
 
 /* NEXT:
-- look into error handling. How can I detect things like a 404 status ?
-- try binary file
-- set permissions on downloaded file
 - timeout
+	spin up a localhost web server to test this more easily
 	example from SO:
 	client := http.Client{Timeout: 10 * time.Second}
 	client.Get("http://example.com/")
-
+- explore headers, redirects, etc.
 */
 
 func download(url, filePath string) (err error) {
@@ -50,14 +49,20 @@ func main() {
 	downloadTasks := []struct {
 		url          string
 		downloadPath string
+		executable   bool
 	}{
 		{
 			downloadPath: "./files/home.html",
 			url:          "https://www.joecullin.com/",
 		},
+		// {
+		// 	downloadPath: "./files/404.txt",
+		// 	url:          "https://www.joecullin.com/afdasdfasdfdasfadfds",
+		// },
 		{
-			downloadPath: "./files/404.txt",
-			url:          "https://www.joecullin.com/afdasdfasdfdasfadfds",
+			downloadPath: "./files/mac_app",
+			url:          "https://www.joecullin.com/go_test/app-amd64-mac",
+			executable:   true,
 		},
 	}
 
@@ -68,9 +73,18 @@ func main() {
 		if err != nil {
 			fmt.Printf("ERROR for %s: %s\n", task.url, err)
 			errorCount++
-		} else {
-			successCount++
+			continue
 		}
+		if task.executable && runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+			fmt.Println("Updating permissions on downloaded file.")
+			if err = os.Chmod(task.downloadPath, 0744); err != nil {
+				fmt.Printf("ERROR changing permissions on %s: %s\n", task.downloadPath, err)
+				errorCount++
+				continue
+			}
+		}
+
+		successCount++
 	}
 	fmt.Printf("\nDone! %d good, %d bad.\n", successCount, errorCount)
 	if errorCount > 0 {
