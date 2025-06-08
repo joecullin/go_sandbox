@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
@@ -53,13 +54,14 @@ func main() {
 	if showVersion {
 		fmt.Println("Version=2")
 	} else if repeatVersion {
+		fmt.Println("printing version every 2 seconds forever...")
 		ticker := time.Tick(2 * time.Second)
 		for next := range ticker {
 			fmt.Printf("Version=2 (tick %v)\n", next)
 		}
 	} else if replaceSelf {
-		selfPath := "./bin/copytest"
-		newVersionPath := "./bin/copytestV2"
+		selfPath := filepath.Join(".", "bin", "copytest")
+		newVersionPath := filepath.Join(".", "bin", "copytestV2")
 		err := move(selfPath, newVersionPath)
 		if err != nil {
 			fmt.Printf("ERROR copying file: %s\n", err)
@@ -98,8 +100,8 @@ func main() {
 			executable bool
 		}{
 			{
-				oldPath:    "./files/test.txt",
-				newPath:    "./files/test_copy.txt",
+				oldPath:    filepath.Join(".", "files", "test.txt"),
+				newPath:    filepath.Join(".", "files", "test_copy.txt"),
 				executable: true,
 			},
 		}

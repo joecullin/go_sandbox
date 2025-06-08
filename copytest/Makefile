@@ -34,6 +34,11 @@ build:
 	./bin/copytestV2 --version
 	@echo
 
+wincopy:
+	cp bin/*.exe wintest
+	rm -f wintest/wintest.zip
+	pushd wintest && zip wintest.zip *.exe && popd
+
 local-replace-test:
 	make build
 
