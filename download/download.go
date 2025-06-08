@@ -51,19 +51,13 @@ func main() {
 		downloadPath string
 		executable   bool
 	}{
-		// {
-		// 	downloadPath: "./files/home.html",
-		// 	url:          "https://www.joecullin.com/",
-		// },
-		// {
-		// 	downloadPath: "./files/404.txt",
-		// 	url:          "https://www.joecullin.com/afdasdfasdfdasfadfds",
-		// },
 		{
-			// downloadPath: "./files/mac_app",
-			downloadPath: "./bin/download-amd64-mac",
-			url:          "https://www.joecullin.com/go_test/app-amd64-mac",
-			executable:   true,
+			downloadPath: "./files/home.html",
+			url:          "https://www.joecullin.com/",
+		},
+		{
+			downloadPath: "./files/404.txt",
+			url:          "https://www.joecullin.com/afdasdfasdfdasfadfds",
 		},
 	}
 
