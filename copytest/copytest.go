@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io"
+	// "io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -12,27 +12,33 @@ import (
 )
 
 func move(newPath, oldPath string) (err error) {
-	inputFile, err := os.Open(oldPath)
-	if err != nil {
-		fmt.Println("can't open source file!")
-		return err
+	errRename := os.Rename(oldPath, newPath); if errRename != nil {
+		fmt.Printf("can't copy file %s to %s!\n", oldPath, newPath)
+		return errRename
 	}
-	defer inputFile.Close()
-
-	outputFile, err := os.Create(newPath)
-	if err != nil {
-		fmt.Println("can't create destination file!")
-		return err
-	}
-	defer outputFile.Close()
-
-	n, err := io.Copy(outputFile, inputFile)
-	if err != nil {
-		fmt.Println("can't write output!")
-		return err
-	}
-	fmt.Printf("wrote %d bytes to %s\n", n, newPath)
 	return nil
+
+	// inputFile, err := os.Open(oldPath)
+	// if err != nil {
+	// 	fmt.Println("can't open source file!")
+	// 	return err
+	// }
+	// defer inputFile.Close()
+
+	// outputFile, err := os.Create(newPath)
+	// if err != nil {
+	// 	fmt.Println("can't create destination file!")
+	// 	return err
+	// }
+	// defer outputFile.Close()
+
+	// n, err := io.Copy(outputFile, inputFile)
+	// if err != nil {
+	// 	fmt.Println("can't write output!")
+	// 	return err
+	// }
+	// fmt.Printf("wrote %d bytes to %s\n", n, newPath)
+	// return nil
 }
 
 func main() {
