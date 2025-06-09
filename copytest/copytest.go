@@ -13,6 +13,7 @@ import (
 
 func move(destPath, sourcePath string) (err error) {
 	backupPath := destPath + ".bak"
+	fmt.Printf("backing up file %s to %s!\n", destPath, backupPath)
 	errBackup := os.Rename(destPath, backupPath)
 	if errBackup != nil {
 		fmt.Printf("can't back up file %s to %s!\n", destPath, backupPath)
