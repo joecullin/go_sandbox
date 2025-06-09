@@ -5,26 +5,42 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 )
 
 func move(destPath, sourcePath string) (err error) {
-	backupPath := destPath + ".bak"
-	fmt.Printf("backing up file %s to %s!\n", destPath, backupPath)
-	errBackup := os.Rename(destPath, backupPath)
-	if errBackup != nil {
-		fmt.Printf("can't back up file %s to %s!\n", destPath, backupPath)
-		return errBackup
+
+	// Windows gives "Access Denied" if we try to overwrite our the currently running exe.
+	// But, it lets us do it in two steps:
+	//   1. Rename the in-use file to ".bak"
+	//   2. Copy the new file to the current exe.
+	// I guess it's nice to have the ".bak" file too, for rollbacks in case of failure?
+	// We can do the same on linux & mac for consistency. (We'll have to fix perms though.)
+
+	// detect old file's current permissions before we rename it
+	var perms os.FileMode
+	perms = 0644
+	if runtime.GOOS != "windows" {
+		if fileInfo, err := os.Lstat(destPath); err != nil {
+			fmt.Printf("can't get current permissions for dest file %s: %v\n", destPath, err)
+			// (Keep going. Maybe it's a new file.)
+		} else {
+			perms = fileInfo.Mode().Perm()
+			fmt.Printf("current permissions of dest file %s: %#o\n", destPath, perms)
+		}
 	}
 
-	// errRename := os.Rename(sourcePath, destPath); if errRename != nil {
-	// 	fmt.Printf("can't copy file %s to %s!\n", sourcePath, destPath)
-	// 	return errRename
-	// }
-	// return nil
+	backupPath := destPath + ".bak"
+	fmt.Printf("backing up file %s to %s!\n", destPath, backupPath)
+	if err := os.Rename(destPath, backupPath); err != nil {
+		fmt.Printf("can't back up file %s to %s!\n", destPath, backupPath)
+		return err
+	}
 
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
@@ -46,6 +62,15 @@ func move(destPath, sourcePath string) (err error) {
 		return err
 	}
 	fmt.Printf("copied %s to %s. wrote %d bytes.\n", sourcePath, destPath, n)
+
+	if runtime.GOOS != "windows" {
+		fmt.Println("Updating permissions on copied file.")
+		if err = os.Chmod(destPath, perms); err != nil {
+			fmt.Printf("ERROR changing permissions on %s: %s\n", destPath, err)
+			os.Exit(1)
+		}
+	}
+
 	return nil
 }
 
@@ -81,36 +106,38 @@ func main() {
 		}
 		selfPath := filepath.Join(".", "bin", selfName)
 		newVersionPath := filepath.Join(".", "bin", sourceName)
-		err := move(selfPath, newVersionPath)
-		if err != nil {
+		if err := move(selfPath, newVersionPath); err != nil {
 			fmt.Printf("ERROR copying file: %s\n", err)
 			os.Exit(1)
 		}
-		if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
-			fmt.Println("Updating permissions on copied file.")
-			if err = os.Chmod(selfPath, 0744); err != nil {
-				fmt.Printf("ERROR changing permissions on %s: %s\n", selfPath, err)
-				os.Exit(1)
+		fmt.Println("Done overwriting self! Now trying to restart...")
+
+		// selfPath += "UMMMMM" // for testing failure
+
+		restartParams := []string{"--version-repeat"}
+		if runtime.GOOS != "windows" {
+			// Exec is nicer when it's available.
+			// (Replaces current process, so things like job control in shell still work.)
+			params := append([]string{"_"}, restartParams...)
+			env := os.Environ()
+			if err := syscall.Exec(selfPath, params, env); err != nil {
+				fmt.Printf("Error re-starting %s with params %v: %e\n", selfPath, params, err)
+			}
+			fmt.Println("done re-starting!")
+		} else {
+			// Windows: no syscall.exec.
+			// So we'll start a new process then exit this one.
+			cmd := exec.Command(selfPath, strings.Join(restartParams, " "))
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			if err := cmd.Start(); err != nil {
+				fmt.Println("Error starting new process!", err)
+			} else {
+				fmt.Println("Started new process! Exiting this one")
+				os.Exit(0)
 			}
 		}
-		fmt.Println("done overwriting self!")
-
-		env := os.Environ()
-		execErr := syscall.Exec(selfPath, []string{"_", "--version-repeat"}, env)
-		if execErr != nil {
-			fmt.Println("Error re-starting.", execErr)
-		}
-
-		fmt.Println("done re-starting!")
-
-		// cmd :=  exec.Command(selfPath, "--version")
-		// var out strings.Builder
-		// cmd.Stdout = &out
-		// cmdErr := cmd.Run()
-		// if cmdErr != nil {
-		// 	fmt.Println("Error!", cmdErr)
-		// }
-		// fmt.Println("output from new command:", out.String())
 
 	} else if doCopy {
 		tasks := []struct {

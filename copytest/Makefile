@@ -1,6 +1,9 @@
 .SILENT: run
 run:
 	echo
+
+	git restore files
+
 	echo "############## test copy text file"
 
 	go run copytest.go --copytest
@@ -20,6 +23,7 @@ format:
 	gofmt -w *.go
 
 build:
+	rm -f bin/*
 	perl -pi -e 's/Version=./Version=1/g' copytest.go
 	GOOS=darwin GOARCH=amd64 go build -o bin/copytestV1 copytest.go
 	GOOS=windows GOARCH=amd64 go build -o bin/copytestV1.exe copytest.go
