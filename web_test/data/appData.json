@@ -1,0 +1,28 @@
+{
+    "releases": [
+        {
+            "version": "1.1",
+            "tags": ["active"],
+            "platform": "linux",
+            "file": "a"
+        },
+        {
+            "version": "1.0",
+            "tags": ["active", "latest"],
+            "platform": "windows",
+            "file": "a.exe"
+        },
+        {
+            "version": "0.9",
+            "tags": ["archive"],
+            "platform": "windows",
+            "file": "a.exe"
+        },
+        {
+            "version": "1.1",
+            "tags": ["active"],
+            "platform": "darwin",
+            "file": "b"
+        }
+    ]
+}
