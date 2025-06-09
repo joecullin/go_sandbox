@@ -32,3 +32,4 @@ go.work.sum
 
 # ignore data files in my downloads app
 download/files/
+*.bak

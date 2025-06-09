@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	// "io"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -11,34 +11,41 @@ import (
 	"time"
 )
 
-func move(newPath, oldPath string) (err error) {
-	errRename := os.Rename(oldPath, newPath); if errRename != nil {
-		fmt.Printf("can't copy file %s to %s!\n", oldPath, newPath)
-		return errRename
+func move(destPath, sourcePath string) (err error) {
+	backupPath := destPath + ".bak"
+	errBackup := os.Rename(destPath, backupPath)
+	if errBackup != nil {
+		fmt.Printf("can't back up file %s to %s!\n", destPath, backupPath)
+		return errBackup
 	}
-	return nil
 
-	// inputFile, err := os.Open(oldPath)
-	// if err != nil {
-	// 	fmt.Println("can't open source file!")
-	// 	return err
+	// errRename := os.Rename(sourcePath, destPath); if errRename != nil {
+	// 	fmt.Printf("can't copy file %s to %s!\n", sourcePath, destPath)
+	// 	return errRename
 	// }
-	// defer inputFile.Close()
-
-	// outputFile, err := os.Create(newPath)
-	// if err != nil {
-	// 	fmt.Println("can't create destination file!")
-	// 	return err
-	// }
-	// defer outputFile.Close()
-
-	// n, err := io.Copy(outputFile, inputFile)
-	// if err != nil {
-	// 	fmt.Println("can't write output!")
-	// 	return err
-	// }
-	// fmt.Printf("wrote %d bytes to %s\n", n, newPath)
 	// return nil
+
+	inputFile, err := os.Open(sourcePath)
+	if err != nil {
+		fmt.Println("can't open source file!")
+		return err
+	}
+	defer inputFile.Close()
+
+	outputFile, err := os.Create(destPath)
+	if err != nil {
+		fmt.Println("can't create destination file!")
+		return err
+	}
+	defer outputFile.Close()
+
+	n, err := io.Copy(outputFile, inputFile)
+	if err != nil {
+		fmt.Println("can't write output!")
+		return err
+	}
+	fmt.Printf("copied %s to %s. wrote %d bytes.\n", sourcePath, destPath, n)
+	return nil
 }
 
 func main() {
@@ -78,13 +85,13 @@ func main() {
 			fmt.Printf("ERROR copying file: %s\n", err)
 			os.Exit(1)
 		}
-		// if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
-		// 	fmt.Println("Updating permissions on copied file.")
-		// 	if err = os.Chmod(selfPath, 0744); err != nil {
-		// 		fmt.Printf("ERROR changing permissions on %s: %s\n", selfPath, err)
-		// 		os.Exit(1)
-		// 	}
-		// }
+		if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+			fmt.Println("Updating permissions on copied file.")
+			if err = os.Chmod(selfPath, 0744); err != nil {
+				fmt.Printf("ERROR changing permissions on %s: %s\n", selfPath, err)
+				os.Exit(1)
+			}
+		}
 		fmt.Println("done overwriting self!")
 
 		env := os.Environ()
@@ -119,7 +126,7 @@ func main() {
 
 		errorCount, successCount := 0, 0
 		for index, task := range tasks {
-			fmt.Printf("\ntask %d of %d: moving %s to %s\n", index+1, len(tasks), task.oldPath, task.newPath)
+			fmt.Printf("\ntask %d of %d: copying %s to %s\n", index+1, len(tasks), task.oldPath, task.newPath)
 			err := move(task.newPath, task.oldPath)
 			if err != nil {
 				fmt.Printf("ERROR for %s: %s\n", task.newPath, err)
